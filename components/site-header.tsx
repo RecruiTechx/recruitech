@@ -1,23 +1,35 @@
-"use client"
+'use client'
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth-context"
+import Link from 'next/link'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 
 export function SiteHeader() {
-  const { authed, logout } = useAuth()
+  const { isAuthenticated, signOut } = useAuth()
   const router = useRouter()
 
-  function onLogout() {
-    logout()
-    router.push("/auth")
+  async function handleLogout() {
+    try {
+      await signOut()
+      router.push('/auth')
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
   }
 
   return (
     <header className="w-full border-b border-border">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <Link href="/dashboard" className="font-semibold tracking-tight text-pretty brand-text">
-          {"RecruiTech x Exercise"}
+        <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <Image
+            src="/recruitech-logo.png"
+            alt="RecruiTech"
+            width={160}
+            height={48}
+            priority
+            className="h-12 w-auto"
+          />
         </Link>
         <ul className="hidden gap-6 text-sm md:flex">
           <li>
@@ -33,18 +45,18 @@ export function SiteHeader() {
           {/* Removed Agentic AI from navbar per request */}
         </ul>
         <div className="flex items-center gap-2">
-          {!authed ? (
+          {!isAuthenticated ? (
             <>
               <Link href="/auth" className="text-sm hover:underline">
-                {"Login"}
+                Login
               </Link>
-              <Link href="/auth" className="btn-gradient text-xs">
-                {"Sign Up"}
+              <Link href="/auth/signup" className="btn-gradient text-xs">
+                Sign Up
               </Link>
             </>
           ) : (
-            <button onClick={onLogout} className="btn-outline text-xs">
-              {"Log out"}
+            <button onClick={handleLogout} className="btn-outline text-xs">
+              Log out
             </button>
           )}
         </div>
