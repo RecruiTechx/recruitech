@@ -40,9 +40,37 @@ export const mockQuestions: Question[] = [
       },
     ],
     templateCode: `function twoSum(nums, target) {
-  // Write your solution here
+  // TODO: Implement your solution here
+  // Hint: Consider using a hash map to store visited numbers
   
+  // Step 1: Create a map to store numbers and their indices
+  
+  // Step 2: Iterate through the array
+  
+  // Step 3: For each number, check if (target - number) exists in the map
+  
+  // Step 4: If found, return the indices
+  
+  // Step 5: Otherwise, add the current number to the map
+  
+  return []; // Replace with your solution
 }`,
+    templateCodePython: `def two_sum(nums, target):
+    # TODO: Implement your solution here
+    # Hint: Consider using a dictionary to store visited numbers
+    
+    # Step 1: Create a dictionary to store numbers and their indices
+    
+    # Step 2: Iterate through the array
+    
+    # Step 3: For each number, check if (target - number) exists in the dictionary
+    
+    # Step 4: If found, return the indices
+    
+    # Step 5: Otherwise, add the current number to the dictionary
+    
+    return []  # Replace with your solution
+`,
     timeLimit: 3000,
   },
   {
@@ -81,9 +109,33 @@ export const mockQuestions: Question[] = [
       },
     ],
     templateCode: `function reverseString(s) {
-  // Write your solution here
+  // TODO: Implement your solution here
+  // Note: Modify the array in-place (O(1) extra space)
   
+  // Approach 1: Two pointers from start and end
+  // Step 1: Initialize two pointers (left and right)
+  
+  // Step 2: While left < right, swap s[left] and s[right]
+  
+  // Step 3: Move pointers towards center
+  
+  // Remember: This function modifies the array in-place
+  // No need to return anything
 }`,
+    templateCodePython: `def reverse_string(s):
+    # TODO: Implement your solution here
+    # Note: Modify the list in-place (O(1) extra space)
+    
+    # Approach 1: Two pointers from start and end
+    # Step 1: Initialize two pointers (left and right)
+    
+    # Step 2: While left < right, swap s[left] and s[right]
+    
+    # Step 3: Move pointers towards center
+    
+    # Remember: This function modifies the list in-place
+    # No need to return anything
+`,
     timeLimit: 3000,
   },
   {
@@ -132,9 +184,39 @@ export const mockQuestions: Question[] = [
       },
     ],
     templateCode: `function isPalindrome(x) {
-  // Write your solution here
+  // TODO: Implement your solution here
+  // Return true if x is palindrome, false otherwise
   
+  // Edge case: Negative numbers are not palindromes
+  
+  // Approach 1: Convert to string and compare
+  // Step 1: Convert number to string
+  
+  // Step 2: Reverse the string
+  
+  // Step 3: Compare original with reversed
+  
+  // Approach 2: Mathematical approach (reverse the number)
+  
+  return false; // Replace with your solution
 }`,
+    templateCodePython: `def is_palindrome(x):
+    # TODO: Implement your solution here
+    # Return True if x is palindrome, False otherwise
+    
+    # Edge case: Negative numbers are not palindromes
+    
+    # Approach 1: Convert to string and compare
+    # Step 1: Convert number to string
+    
+    # Step 2: Reverse the string
+    
+    # Step 3: Compare original with reversed
+    
+    # Approach 2: Mathematical approach (reverse the number)
+    
+    return False  # Replace with your solution
+`,
     timeLimit: 3000,
   },
 ];

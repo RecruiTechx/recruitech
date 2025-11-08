@@ -23,6 +23,7 @@ export interface Question {
   }>;
   testCases: TestCase[];
   templateCode: string;
+  templateCodePython?: string; // Optional Python template
   timeLimit: number; // in milliseconds
 }
 

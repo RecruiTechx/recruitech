@@ -26,6 +26,7 @@ export default function SoftwareEngineerTestPage() {
   const [showSubmissions, setShowSubmissions] = useState(false);
   const [totalTimeInSeconds] = useState(30 * 60); // 30 minutes
   const [questionAttempts, setQuestionAttempts] = useState<Record<number, SubmissionResult[]>>({});
+  const [language, setLanguage] = useState<'javascript' | 'python'>('javascript');
 
   // Auth check
   useEffect(() => {
@@ -39,18 +40,21 @@ export default function SoftwareEngineerTestPage() {
   // Initialize code with template
   useEffect(() => {
     if (currentQuestion) {
-      setUserCode(currentQuestion.templateCode);
+      const template = language === 'python' 
+        ? (currentQuestion.templateCodePython || currentQuestion.templateCode)
+        : currentQuestion.templateCode;
+      setUserCode(template);
       setSubmissionResult(null);
       setShowSubmissions(false);
     }
-  }, [currentQuestionIndex, currentQuestion]);
+  }, [currentQuestionIndex, currentQuestion, language]);
 
   const handleRunCode = async () => {
     if (!currentQuestion) return;
 
     setIsRunning(true);
     try {
-      const result = await submitCode(currentQuestion, userCode);
+      const result = await submitCode(currentQuestion, userCode, language);
       setSubmissionResult(result);
       
       // Store attempts
@@ -90,7 +94,7 @@ export default function SoftwareEngineerTestPage() {
 
     setIsRunning(true);
     try {
-      const result = await submitCode(currentQuestion, userCode);
+      const result = await submitCode(currentQuestion, userCode, language);
       
       if (result.success) {
         toast({
@@ -259,32 +263,34 @@ export default function SoftwareEngineerTestPage() {
               </div>
 
               {/* Code Editor */}
-              <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
+              <div className="border rounded-lg overflow-hidden bg-white shadow-sm" style={{ height: '500px' }}>
                 <CodeEditor
                   initialCode={userCode}
                   onChange={setUserCode}
                   onRun={handleRunCode}
                   onSubmit={handleSubmit}
                   isLoading={isRunning}
+                  language={language}
+                  onLanguageChange={setLanguage}
                 />
+              </div>
 
-                {/* Action Buttons */}
-                <div className="border-t p-4 flex gap-2">
-                  <button
-                    onClick={handleRunCode}
-                    disabled={isRunning || timeUp}
-                    className="flex-1 px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition text-sm font-medium"
-                  >
-                    {isRunning ? 'Running...' : 'Run Code'}
-                  </button>
-                  <button
-                    onClick={handleSubmit}
-                    disabled={isRunning || timeUp || !submissionResult?.success}
-                    className="flex-1 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition text-sm font-medium"
-                  >
-                    {isRunning ? 'Submitting...' : 'Submit'}
-                  </button>
-                </div>
+              {/* Action Buttons */}
+              <div className="border rounded-lg p-4 bg-white shadow-sm flex gap-2">
+                <button
+                  onClick={handleRunCode}
+                  disabled={isRunning || timeUp}
+                  className="flex-1 px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition text-sm font-medium"
+                >
+                  {isRunning ? 'Running...' : 'Run Code'}
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={isRunning || timeUp || !submissionResult?.success}
+                  className="flex-1 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition text-sm font-medium"
+                >
+                  {isRunning ? 'Submitting...' : 'Submit'}
+                </button>
               </div>
 
               {/* Test Results */}
