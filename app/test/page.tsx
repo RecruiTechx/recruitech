@@ -12,7 +12,7 @@ export default function TestPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-16">
       <SiteHeader />
       <div className="container mx-auto p-4 max-w-7xl flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
