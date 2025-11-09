@@ -2,20 +2,13 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { SiteHeader } from "@/components/site-header"
 import { useAuth } from "@/lib/auth-context"
 
 export default function DashboardPage() {
   const router = useRouter()
-  const { user, loading } = useAuth()
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/auth")
-    }
-  }, [user, loading, router])
+  const { isAuthenticated } = useAuth()
 
   const scrollToAlumni = () => {
     const alumniSection = document.getElementById('alumni-section')
@@ -24,28 +17,19 @@ export default function DashboardPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <>
-        <SiteHeader />
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Loading dashboard...</p>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  if (!user) {
-    return null
+  const handleApplyClick = (e: React.MouseEvent) => {
+    if (!isAuthenticated) {
+      e.preventDefault()
+      router.push('/auth')
+    } else {
+      router.push('/open')
+    }
   }
 
   return (
     <>
       <SiteHeader />
-      <main className="bg-white min-h-screen">
+      <main className="bg-white min-h-screen pt-16">
         {/* Hero Section with Person and Info */}
         <section className="relative overflow-hidden bg-white pt-6 pb-8 md:pt-10 md:pb-12">
           <div className="mx-auto max-w-7xl px-6 md:px-8">
@@ -252,7 +236,7 @@ export default function DashboardPage() {
               />
               
               {/* Apply Now Button */}
-              <Link href="/open" className="inline-block hover:scale-105 transition-transform duration-200">
+              <button onClick={handleApplyClick} className="inline-block hover:scale-105 transition-transform duration-200">
                 <Image
                   src="/dashboard/action/Group 735.png"
                   alt="Apply Now"
@@ -260,7 +244,7 @@ export default function DashboardPage() {
                   height={60}
                   className="h-auto w-auto"
                 />
-              </Link>
+              </button>
             </div>
           </div>
         </section>

@@ -5,7 +5,7 @@ export default function OpenPositionsPage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-8 pt-24">
         <h2 className="text-3xl font-bold text-pretty brand-text">{"Open Positions"}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{"Choose a role to continue to the test section."}</p>
 
