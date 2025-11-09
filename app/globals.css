@@ -4,6 +4,11 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --brand-start: #eb7d59;
+  --brand-end: #d9275e;
+  --text: #111827;
+  --muted-text: #6b7280;
+  --surface: #ffffff;
   --brand-from: #f8367f; /* pink */
   --brand-to: #f89b29; /* orange */
   --brand-deep: #db2f73; /* deeper pink for hover/pressed */
@@ -46,6 +51,11 @@
 
 /* Dark mode stays simple and accessible */
 .dark {
+  --brand-start: #eb7d59;
+  --brand-end: #d9275e;
+  --text: #f9fafb;
+  --muted-text: #cbd5f5;
+  --surface: #0b1220;
   --background: #0b1220;
   --foreground: #f8fafc;
   --card: #0b1220;
@@ -81,7 +91,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -262,5 +272,35 @@
     border-radius: 2px;
     background-image: linear-gradient(90deg, var(--brand-from), var(--brand-to));
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9) inset;
+  }
+
+  .marquee-mask {
+    position: relative;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 28s linear infinite;
+  }
+  .marquee-mask:hover .marquee-track {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    transform: none;
   }
 }
