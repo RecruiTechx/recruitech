@@ -156,17 +156,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const signOut = useCallback(async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
+      // Always clear local state first
       setSession(null);
       setUser(null);
+
+      // Try to sign out from Supabase, but don't fail if session is missing
+      const { error } = await supabase.auth.signOut();
+
+      if (error && error.message !== 'Auth session missing!') {
+        console.error('Sign out error:', error);
+        // Don't throw - still consider sign out successful locally
+      }
     } catch (err) {
       console.error('Sign out error:', err);
-      throw err;
+      // Don't throw - local sign out was successful
     }
   }, []);
 
