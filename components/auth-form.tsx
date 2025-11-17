@@ -43,23 +43,22 @@ export default function AuthForm() {
   async function handleGoogleSignIn() {
     try {
       setIsPending(true);
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const redirectUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback`
+        : process.env.NEXT_PUBLIC_APP_URL + '/auth/callback'
+      
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Google sign-in failed';
-      console.error('Google sign in error:', message);
-      setError(message);
+          redirectTo: redirectUrl
+        }
+      })
+      if (error) throw error
+    } catch (error) {
+      console.error('Error signing in with Google:', error)
       toast({
         title: 'Error',
-        description: message,
+        description: 'Failed to sign in with Google',
         variant: 'destructive',
       });
       setIsPending(false);
