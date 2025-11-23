@@ -62,12 +62,22 @@ export default function DocumentScreeningPage() {
       const positionParam = new URLSearchParams(window.location.search).get("position") || "ui-ux"
       setPosition(positionParam)
       
-      // Create application
-      const result = await createApplication(user.id, positionParam)
-      if (result.success && 'data' in result && result.data) {
-        setApplicationId(result.data.id)
+      // Check for existing application first
+      const { getUserApplication } = await import("@/app/actions/application")
+      const existingApp = await getUserApplication(user.id)
+      
+      if (existingApp.success && existingApp.data) {
+        // User already has an application - redirect to My Application page
+        router.push("/my-application")
+        return
       } else {
-        setError('error' in result ? (result.error || "Failed to create application") : "Failed to create application")
+        // Create new application
+        const result = await createApplication(user.id, positionParam)
+        if (result.success && 'data' in result && result.data) {
+          setApplicationId(result.data.id)
+        } else {
+          setError('error' in result ? (result.error || "Failed to create application") : "Failed to create application")
+        }
       }
     }
 

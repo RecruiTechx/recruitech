@@ -40,7 +40,7 @@ export function SiteHeader() {
             className="h-8 w-auto"
           />
         </Link>
-        <ul className="hidden gap-50 items-center md:flex">
+        <ul className="hidden gap-8 items-center md:flex">
           <li>
             <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
               <Image
@@ -63,6 +63,13 @@ export function SiteHeader() {
               />
             </Link>
           </li>
+          {isAuthenticated && (
+            <li>
+              <Link href="/my-application" className="text-sm font-medium text-gray-700 hover:text-pink-600 transition-colors">
+                My Application
+              </Link>
+            </li>
+          )}
           <li>
             <button onClick={handleApplyClick} className="hover:opacity-80 transition-opacity">
               <Image

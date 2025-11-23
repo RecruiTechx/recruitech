@@ -92,6 +92,8 @@ export async function saveDocuments(
         motivation_letter_url: documents.motivationLetterUrl || null,
         follow_proof_url: documents.followProofUrl || null,
         twibbon_url: documents.twibbonUrl || null,
+      }, {
+        onConflict: 'application_id'
       })
       .select()
       .single()
@@ -144,8 +146,8 @@ export async function getApplication(applicationId: string) {
       .from('applications')
       .select(`
         *,
-        personal_information (*),
-        documents (*)
+        personal_information!fk_personal_information_application(*),
+        documents!fk_documents_application(*)
       `)
       .eq('id', applicationId)
       .single()
@@ -158,6 +160,39 @@ export async function getApplication(applicationId: string) {
     return { success: true, data }
   } catch (error) {
     console.error('Error in getApplication:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Get user's application (for authenticated users)
+ */
+export async function getUserApplication(userId: string) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('applications')
+      .select(`
+        *,
+        personal_information!fk_personal_information_application(*),
+        documents!fk_documents_application(*)
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows returned - user has no application
+        return { success: true, data: null }
+      }
+      console.error('Error getting user application:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error in getUserApplication:', error)
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
@@ -196,7 +231,7 @@ export async function submitApplication(applicationId: string) {
   try {
     // Update status to submitted
     const result = await updateApplicationStatus(applicationId, 'submitted')
-    
+
     if (!result.success) {
       return result
     }
@@ -204,6 +239,197 @@ export async function submitApplication(applicationId: string) {
     return { success: true, message: 'Application submitted successfully' }
   } catch (error) {
     console.error('Error in submitApplication:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Get all applications with related data (ADMIN ONLY)
+ * 
+ * @returns All applications with personal info and documents
+ */
+export async function getAllApplications() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('applications')
+      .select(`
+        *,
+        personal_information!fk_personal_information_application(*),
+        documents!fk_documents_application(*)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching all applications:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error in getAllApplications:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Get applications by status (ADMIN ONLY)
+ */
+export async function getApplicationsByStatus(status: string) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('applications')
+      .select(`
+        *,
+        personal_information!fk_personal_information_application(*),
+        documents!fk_documents_application(*)
+      `)
+      .eq('status', status)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching applications by status:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error in getApplicationsByStatus:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Get applications by position (ADMIN ONLY)
+ */
+export async function getApplicationsByPosition(position: string) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('applications')
+      .select(`
+        *,
+        personal_information!fk_personal_information_application(*),
+        documents!fk_documents_application(*)
+      `)
+      .eq('position', position)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching applications by position:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error in getApplicationsByPosition:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Search applications by name or NPM (ADMIN ONLY)
+ */
+export async function searchApplications(query: string) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('applications')
+      .select(`
+        *,
+        personal_information!fk_personal_information_application(*),
+        documents!fk_documents_application(*)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error searching applications:', error)
+      return { success: false, error: error.message }
+    }
+
+    // Filter on client side for name/npm search
+    const filtered = data?.filter(app => {
+      const personalInfo = app.personal_information
+      if (!personalInfo) return false
+
+      const searchLower = query.toLowerCase()
+      return (
+        personalInfo.full_name?.toLowerCase().includes(searchLower) ||
+        personalInfo.npm?.toLowerCase().includes(searchLower)
+      )
+    })
+
+    return { success: true, data: filtered }
+  } catch (error) {
+    console.error('Error in searchApplications:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Bulk update application statuses (ADMIN ONLY)
+ */
+export async function bulkUpdateApplicationStatus(
+  applicationIds: string[],
+  status: Database['public']['Tables']['applications']['Row']['status']
+) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('applications')
+      .update({ status })
+      .in('id', applicationIds)
+      .select()
+
+    if (error) {
+      console.error('Error bulk updating application status:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error in bulkUpdateApplicationStatus:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Delete an application (ADMIN ONLY)
+ */
+export async function deleteApplication(applicationId: string) {
+  try {
+    // Delete related records first (documents and personal_information will cascade)
+    const { error } = await supabaseAdmin
+      .from('applications')
+      .delete()
+      .eq('id', applicationId)
+
+    if (error) {
+      console.error('Error deleting application:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, message: 'Application deleted successfully' }
+  } catch (error) {
+    console.error('Error in deleteApplication:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Bulk delete applications (ADMIN ONLY)
+ */
+export async function bulkDeleteApplications(applicationIds: string[]) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('applications')
+      .delete()
+      .in('id', applicationIds)
+
+    if (error) {
+      console.error('Error bulk deleting applications:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, message: `${applicationIds.length} applications deleted successfully` }
+  } catch (error) {
+    console.error('Error in bulkDeleteApplications:', error)
     return { success: false, error: 'An unexpected error occurred' }
   }
 }
