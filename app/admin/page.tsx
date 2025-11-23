@@ -14,17 +14,20 @@ import {
 } from "@/app/actions/positions"
 import { getDashboardStats, type DashboardStats } from "@/app/actions/statistics"
 import { getAllApplications, updateApplicationStatus, deleteApplication } from "@/app/actions/application"
+import { getAllTests } from "@/app/actions/tests"
 import { StatisticsCards, StatusBreakdown, PositionBreakdown } from "@/components/admin/statistics-cards"
 import { ApplicationsTable } from "@/components/admin/applications-table"
 import { ApplicationDetailModal } from "@/components/admin/application-detail-modal"
+import { TestsTab } from "@/components/admin/tests-tab"
 
-type TabType = 'dashboard' | 'positions' | 'applications'
+type TabType = 'dashboard' | 'positions' | 'applications' | 'tests'
 
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard')
   const [positions, setPositions] = useState<Position[]>([])
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null)
   const [applications, setApplications] = useState<any[]>([])
+  const [tests, setTests] = useState<any[]>([])
   const [selectedApplication, setSelectedApplication] = useState<any | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -91,6 +94,7 @@ export default function AdminDashboardPage() {
       loadPositions(),
       loadDashboardStats(),
       loadApplications(),
+      loadTests(),
     ])
     setIsLoading(false)
   }
@@ -113,6 +117,13 @@ export default function AdminDashboardPage() {
     const result = await getAllApplications()
     if (result.success) {
       setApplications(result.data || [])
+    }
+  }
+
+  const loadTests = async () => {
+    const result = await getAllTests()
+    if (result.success) {
+      setTests(result.data || [])
     }
   }
 
@@ -239,8 +250,8 @@ export default function AdminDashboardPage() {
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`px-6 py-3 font-semibold transition-colors relative ${activeTab === 'dashboard'
-                ? 'text-pink-600'
-                : 'text-gray-600 hover:text-gray-800'
+              ? 'text-pink-600'
+              : 'text-gray-600 hover:text-gray-800'
               }`}
           >
             Dashboard
@@ -251,8 +262,8 @@ export default function AdminDashboardPage() {
           <button
             onClick={() => setActiveTab('applications')}
             className={`px-6 py-3 font-semibold transition-colors relative ${activeTab === 'applications'
-                ? 'text-pink-600'
-                : 'text-gray-600 hover:text-gray-800'
+              ? 'text-pink-600'
+              : 'text-gray-600 hover:text-gray-800'
               }`}
           >
             Applications
@@ -263,12 +274,24 @@ export default function AdminDashboardPage() {
           <button
             onClick={() => setActiveTab('positions')}
             className={`px-6 py-3 font-semibold transition-colors relative ${activeTab === 'positions'
-                ? 'text-pink-600'
-                : 'text-gray-600 hover:text-gray-800'
+              ? 'text-pink-600'
+              : 'text-gray-600 hover:text-gray-800'
               }`}
           >
             Positions
             {activeTab === 'positions' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-pink-600"></div>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('tests')}
+            className={`px-6 py-3 font-semibold transition-colors relative ${activeTab === 'tests'
+              ? 'text-pink-600'
+              : 'text-gray-600 hover:text-gray-800'
+              }`}
+          >
+            Tests
+            {activeTab === 'tests' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-pink-600"></div>
             )}
           </button>
@@ -302,6 +325,10 @@ export default function AdminDashboardPage() {
               onDelete={handleDeleteApplication}
             />
           </div>
+        )}
+
+        {activeTab === 'tests' && (
+          <TestsTab tests={tests} positions={positions} onRefresh={loadTests} />
         )}
 
         {activeTab === 'positions' && (

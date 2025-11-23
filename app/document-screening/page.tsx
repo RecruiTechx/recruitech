@@ -6,12 +6,12 @@ import { SiteHeader } from "@/components/site-header"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
-import { 
-  createApplication, 
+import {
+  createApplication,
   savePersonalInformation,
   saveDocuments,
   submitApplication,
-  type PersonalInfoFormData 
+  type PersonalInfoFormData
 } from "@/app/actions/application"
 
 export default function DocumentScreeningPage() {
@@ -61,15 +61,36 @@ export default function DocumentScreeningPage() {
       // Get position from URL or localStorage
       const positionParam = new URLSearchParams(window.location.search).get("position") || "ui-ux"
       setPosition(positionParam)
-      
+
       // Check for existing application first
       const { getUserApplication } = await import("@/app/actions/application")
       const existingApp = await getUserApplication(user.id)
-      
+
       if (existingApp.success && existingApp.data) {
-        // User already has an application - redirect to My Application page
-        router.push("/my-application")
-        return
+        // If application is submitted or later, redirect to My Application page
+        if (existingApp.data.status !== 'draft') {
+          router.push("/my-application")
+          return
+        }
+
+        // If draft, set ID and allow user to continue
+        setApplicationId(existingApp.data.id)
+
+        // Pre-fill form data if available
+        if (existingApp.data.personal_information) {
+          const pi = existingApp.data.personal_information
+          setFormData({
+            fullName: pi.full_name,
+            npm: pi.npm,
+            department: pi.department,
+            major: pi.major,
+            force: pi.force,
+            email: pi.email,
+            phoneNumber: pi.phone_number,
+            idLine: pi.id_line,
+            otherContacts: pi.other_contacts || "",
+          })
+        }
       } else {
         // Create new application
         const result = await createApplication(user.id, positionParam)
@@ -109,7 +130,7 @@ export default function DocumentScreeningPage() {
 
     try {
       const result = await savePersonalInformation(applicationId, formData)
-      
+
       if (result.success) {
         setActiveTab("document")
         return true
@@ -137,7 +158,7 @@ export default function DocumentScreeningPage() {
     })
 
     const result = await response.json()
-    
+
     if (result.success && result.url) {
       return result.url
     } else {
@@ -212,7 +233,7 @@ export default function DocumentScreeningPage() {
       'software-engineer': '/test/software-engineer',
       'project-manager': '/test/project-manager'
     }
-    
+
     const testRoute = testRoutes[position] || '/test/ui-ux'
     router.push(testRoute)
   }
@@ -268,7 +289,7 @@ export default function DocumentScreeningPage() {
           </div>
         </div>
       )}
-      
+
       {/* Progress Navbar */}
       <div className="fixed top-16 left-0 right-0 z-40 w-full border-b border-transparent bg-transparent shadow-sm">
         <div className="relative w-full">
@@ -283,7 +304,7 @@ export default function DocumentScreeningPage() {
               priority
             />
           </div>
-          
+
           {/* Progress blocks on top */}
           <div className="relative z-10 mx-auto max-w-7xl px-8 py-6">
             <Image
@@ -311,23 +332,21 @@ export default function DocumentScreeningPage() {
 
         {/* Tabs */}
         <div className="flex gap-4 mb-8">
-          <button 
+          <button
             onClick={() => setActiveTab("personal")}
-            className={`px-8 py-3 font-semibold rounded-lg transition-colors ${
-              activeTab === "personal" 
-                ? "bg-pink-600 text-white" 
-                : "bg-pink-100 text-pink-600 hover:bg-pink-200"
-            }`}
+            className={`px-8 py-3 font-semibold rounded-lg transition-colors ${activeTab === "personal"
+              ? "bg-pink-600 text-white"
+              : "bg-pink-100 text-pink-600 hover:bg-pink-200"
+              }`}
           >
             Personal Information
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab("document")}
-            className={`px-8 py-3 font-semibold rounded-lg transition-colors ${
-              activeTab === "document" 
-                ? "bg-pink-600 text-white" 
-                : "bg-pink-100 text-pink-600 hover:bg-pink-200"
-            }`}
+            className={`px-8 py-3 font-semibold rounded-lg transition-colors ${activeTab === "document"
+              ? "bg-pink-600 text-white"
+              : "bg-pink-100 text-pink-600 hover:bg-pink-200"
+              }`}
           >
             Document
           </button>
@@ -336,307 +355,307 @@ export default function DocumentScreeningPage() {
         {/* Form */}
         <div className="bg-white rounded-2xl p-8 shadow-sm">
           {activeTab === "personal" ? (
-          <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Full Name */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Full Name
-              </label>
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                placeholder="Lorem Ipsum"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Full Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    placeholder="Lorem Ipsum"
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                </div>
+
+                {/* NPM */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    NPM
+                  </label>
+                  <input
+                    type="text"
+                    name="npm"
+                    value={formData.npm}
+                    onChange={handleInputChange}
+                    placeholder="2306***"
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                </div>
+
+                {/* Department */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Department
+                  </label>
+                  <select
+                    name="department"
+                    value={formData.department}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white"
+                  >
+                    <option value="DTE">DTE</option>
+                    <option value="Electrical Engineering">Electrical Engineering</option>
+                    <option value="Computer Engineering">Computer Engineering</option>
+                  </select>
+                </div>
+
+                {/* Major */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Major
+                  </label>
+                  <select
+                    name="major"
+                    value={formData.major}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white"
+                  >
+                    <option value="Teknik Elektro">Teknik Elektro</option>
+                    <option value="Other Major">Other Major</option>
+                  </select>
+                </div>
+
+                {/* Force */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Force
+                  </label>
+                  <select
+                    name="force"
+                    value={formData.force}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white"
+                  >
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                  </select>
+                </div>
+
+                {/* E-mail */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    E-mail
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Lorem Ipsum"
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    placeholder="08***"
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                </div>
+
+                {/* ID Line */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    ID Line
+                  </label>
+                  <input
+                    type="text"
+                    name="idLine"
+                    value={formData.idLine}
+                    onChange={handleInputChange}
+                    placeholder="Lorem Ipsum"
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                </div>
+              </div>
+
+              {/* Other Contacts */}
+              <div className="mt-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Other Contacts We Can Contact
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Format: [ID Line/Whatsapp - Name - Relationship (Example: Friend/Sister/Mother)]
+                </p>
+                <input
+                  type="text"
+                  name="otherContacts"
+                  value={formData.otherContacts}
+                  onChange={handleInputChange}
+                  placeholder="08*** - Name - Relationship"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                />
+              </div>
+
+              {/* Next Button */}
+              <div className="flex justify-end mt-8">
+                <button
+                  onClick={handleSavePersonalInfo}
+                  disabled={isLoading}
+                  className="px-12 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-semibold rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? "Saving..." : "Next"}
+                </button>
+              </div>
             </div>
-
-            {/* NPM */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                NPM
-              </label>
-              <input
-                type="text"
-                name="npm"
-                value={formData.npm}
-                onChange={handleInputChange}
-                placeholder="2306***"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-
-            {/* Department */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Department
-              </label>
-              <select 
-                name="department"
-                value={formData.department}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white"
-              >
-                <option value="DTE">DTE</option>
-                <option value="Electrical Engineering">Electrical Engineering</option>
-                <option value="Computer Engineering">Computer Engineering</option>
-              </select>
-            </div>
-
-            {/* Major */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Major
-              </label>
-              <select 
-                name="major"
-                value={formData.major}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white"
-              >
-                <option value="Teknik Elektro">Teknik Elektro</option>
-                <option value="Other Major">Other Major</option>
-              </select>
-            </div>
-
-            {/* Force */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Force
-              </label>
-              <select 
-                name="force"
-                value={formData.force}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white"
-              >
-                <option value="2024">2024</option>
-                <option value="2023">2023</option>
-                <option value="2022">2022</option>
-              </select>
-            </div>
-
-            {/* E-mail */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                E-mail
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Lorem Ipsum"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-
-            {/* Phone Number */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                placeholder="08***"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-
-            {/* ID Line */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                ID Line
-              </label>
-              <input
-                type="text"
-                name="idLine"
-                value={formData.idLine}
-                onChange={handleInputChange}
-                placeholder="Lorem Ipsum"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-          </div>
-
-          {/* Other Contacts */}
-          <div className="mt-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Other Contacts We Can Contact
-            </label>
-            <p className="text-xs text-gray-500 mb-2">
-              Format: [ID Line/Whatsapp - Name - Relationship (Example: Friend/Sister/Mother)]
-            </p>
-            <input
-              type="text"
-              name="otherContacts"
-              value={formData.otherContacts}
-              onChange={handleInputChange}
-              placeholder="08*** - Name - Relationship"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-            />
-          </div>
-
-          {/* Next Button */}
-          <div className="flex justify-end mt-8">
-            <button 
-              onClick={handleSavePersonalInfo}
-              disabled={isLoading}
-              className="px-12 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-semibold rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Saving..." : "Next"}
-            </button>
-          </div>
-          </div>
           ) : (
-          <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Curriculum Vitae (CV) */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Curriculum Vitae (CV)
-                </label>
-                <p className="text-xs text-gray-500 mb-3">NOTE: Must use ATS CV!</p>
-                <label className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-pink-400 transition-colors cursor-pointer block">
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => handleFileChange('cv', e.target.files?.[0] || null)}
-                    className="hidden"
-                  />
-                  <div className="flex flex-col items-center">
-                    <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    {files.cv ? (
-                      <p className="text-sm text-green-600 font-semibold mb-1">{files.cv.name}</p>
-                    ) : (
-                      <p className="text-sm text-gray-600 mb-1">
-                        Drag and drop file or <span className="text-pink-600 font-semibold">Choose File</span>
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-400 mt-2">Supported formats: PDF</p>
-                    <p className="text-xs text-gray-400">Maximum Size: 10 MB</p>
-                  </div>
-                </label>
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Curriculum Vitae (CV) */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Curriculum Vitae (CV)
+                  </label>
+                  <p className="text-xs text-gray-500 mb-3">NOTE: Must use ATS CV!</p>
+                  <label className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-pink-400 transition-colors cursor-pointer block">
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => handleFileChange('cv', e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center">
+                      <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      {files.cv ? (
+                        <p className="text-sm text-green-600 font-semibold mb-1">{files.cv.name}</p>
+                      ) : (
+                        <p className="text-sm text-gray-600 mb-1">
+                          Drag and drop file or <span className="text-pink-600 font-semibold">Choose File</span>
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-2">Supported formats: PDF</p>
+                      <p className="text-xs text-gray-400">Maximum Size: 10 MB</p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Motivation Letter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Motivation Letter
+                  </label>
+                  <label className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-pink-400 transition-colors cursor-pointer block mt-8">
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => handleFileChange('motivationLetter', e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center">
+                      <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      {files.motivationLetter ? (
+                        <p className="text-sm text-green-600 font-semibold mb-1">{files.motivationLetter.name}</p>
+                      ) : (
+                        <p className="text-sm text-gray-600 mb-1">
+                          Drag and drop file or <span className="text-pink-600 font-semibold">Choose File</span>
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-2">Supported formats: PDF</p>
+                      <p className="text-xs text-gray-400">Maximum Size: 10 MB</p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* @exercise.ftui Follow Proof */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    @exercise.ftui Follow Proof
+                  </label>
+                  <label className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-pink-400 transition-colors cursor-pointer block">
+                    <input
+                      type="file"
+                      accept=".png,.jpg,.jpeg"
+                      onChange={(e) => handleFileChange('followProof', e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center">
+                      <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      {files.followProof ? (
+                        <p className="text-sm text-green-600 font-semibold mb-1">{files.followProof.name}</p>
+                      ) : (
+                        <p className="text-sm text-gray-600 mb-1">
+                          Drag and drop file or <span className="text-pink-600 font-semibold">Choose File</span>
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-2">Supported formats: PNG, JPG</p>
+                      <p className="text-xs text-gray-400">Maximum Size: 10 MB</p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Twibbon InstaStory Upload */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Twibbon InstaStory Upload
+                  </label>
+                  <label className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-pink-400 transition-colors cursor-pointer block">
+                    <input
+                      type="file"
+                      accept=".png,.jpg,.jpeg"
+                      onChange={(e) => handleFileChange('twibbon', e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center">
+                      <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      {files.twibbon ? (
+                        <p className="text-sm text-green-600 font-semibold mb-1">{files.twibbon.name}</p>
+                      ) : (
+                        <p className="text-sm text-gray-600 mb-1">
+                          Drag and drop file or <span className="text-pink-600 font-semibold">Choose File</span>
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-2">Supported formats: PNG, JPG</p>
+                      <p className="text-xs text-gray-400">Maximum Size: 10 MB</p>
+                    </div>
+                  </label>
+                </div>
               </div>
 
-              {/* Motivation Letter */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Motivation Letter
-                </label>
-                <label className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-pink-400 transition-colors cursor-pointer block mt-8">
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => handleFileChange('motivationLetter', e.target.files?.[0] || null)}
-                    className="hidden"
-                  />
-                  <div className="flex flex-col items-center">
-                    <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    {files.motivationLetter ? (
-                      <p className="text-sm text-green-600 font-semibold mb-1">{files.motivationLetter.name}</p>
-                    ) : (
-                      <p className="text-sm text-gray-600 mb-1">
-                        Drag and drop file or <span className="text-pink-600 font-semibold">Choose File</span>
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-400 mt-2">Supported formats: PDF</p>
-                    <p className="text-xs text-gray-400">Maximum Size: 10 MB</p>
-                  </div>
-                </label>
-              </div>
-
-              {/* @exercise.ftui Follow Proof */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  @exercise.ftui Follow Proof
-                </label>
-                <label className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-pink-400 transition-colors cursor-pointer block">
-                  <input
-                    type="file"
-                    accept=".png,.jpg,.jpeg"
-                    onChange={(e) => handleFileChange('followProof', e.target.files?.[0] || null)}
-                    className="hidden"
-                  />
-                  <div className="flex flex-col items-center">
-                    <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    {files.followProof ? (
-                      <p className="text-sm text-green-600 font-semibold mb-1">{files.followProof.name}</p>
-                    ) : (
-                      <p className="text-sm text-gray-600 mb-1">
-                        Drag and drop file or <span className="text-pink-600 font-semibold">Choose File</span>
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-400 mt-2">Supported formats: PNG, JPG</p>
-                    <p className="text-xs text-gray-400">Maximum Size: 10 MB</p>
-                  </div>
-                </label>
-              </div>
-
-              {/* Twibbon InstaStory Upload */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Twibbon InstaStory Upload
-                </label>
-                <label className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-pink-400 transition-colors cursor-pointer block">
-                  <input
-                    type="file"
-                    accept=".png,.jpg,.jpeg"
-                    onChange={(e) => handleFileChange('twibbon', e.target.files?.[0] || null)}
-                    className="hidden"
-                  />
-                  <div className="flex flex-col items-center">
-                    <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    {files.twibbon ? (
-                      <p className="text-sm text-green-600 font-semibold mb-1">{files.twibbon.name}</p>
-                    ) : (
-                      <p className="text-sm text-gray-600 mb-1">
-                        Drag and drop file or <span className="text-pink-600 font-semibold">Choose File</span>
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-400 mt-2">Supported formats: PNG, JPG</p>
-                    <p className="text-xs text-gray-400">Maximum Size: 10 MB</p>
-                  </div>
-                </label>
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-4 mt-8">
+                <button
+                  onClick={() => setActiveTab("personal")}
+                  disabled={isLoading}
+                  className="px-12 py-3 border-2 border-pink-500 text-pink-500 font-semibold rounded-full hover:bg-pink-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="px-12 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-semibold rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? "Submitting..." : "Submit"}
+                </button>
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-4 mt-8">
-              <button 
-                onClick={() => setActiveTab("personal")}
-                disabled={isLoading}
-                className="px-12 py-3 border-2 border-pink-500 text-pink-500 font-semibold rounded-full hover:bg-pink-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Back
-              </button>
-              <button 
-                onClick={handleSubmit}
-                disabled={isLoading}
-                className="px-12 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-semibold rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? "Submitting..." : "Submit"}
-              </button>
-            </div>
-          </div>
           )}
         </div>
       </main>

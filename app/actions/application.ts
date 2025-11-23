@@ -126,6 +126,23 @@ export async function createApplication(userId: string, position: string) {
       .single()
 
     if (error) {
+      // Handle duplicate key error (user already has an application)
+      if (error.code === '23505') {
+        console.log('Application already exists for user, fetching existing one...')
+        const { data: existingApp, error: fetchError } = await supabaseAdmin
+          .from('applications')
+          .select()
+          .eq('user_id', userId)
+          .single()
+
+        if (fetchError) {
+          console.error('Error fetching existing application after duplicate error:', fetchError)
+          return { success: false, error: fetchError.message }
+        }
+
+        return { success: true, data: existingApp }
+      }
+
       console.error('Error creating application:', error)
       return { success: false, error: error.message }
     }

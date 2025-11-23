@@ -13,6 +13,8 @@ export default function MyApplicationPage() {
     const [application, setApplication] = useState<any>(null)
     const [loading, setLoading] = useState(true)
 
+    const [interviews, setInterviews] = useState<any[]>([])
+
     useEffect(() => {
         const loadApplication = async () => {
             if (!user) {
@@ -23,6 +25,15 @@ export default function MyApplicationPage() {
             const result = await getUserApplication(user.id)
             if (result.success && result.data) {
                 setApplication(result.data)
+
+                // Load interviews if status is interview
+                if (result.data.status === 'interview') {
+                    const { getInterviewsByApplication } = await import('@/app/actions/interviews')
+                    const interviewResult = await getInterviewsByApplication(result.data.id)
+                    if (interviewResult.success && interviewResult.data) {
+                        setInterviews(interviewResult.data)
+                    }
+                }
             }
             setLoading(false)
         }
@@ -52,7 +63,7 @@ export default function MyApplicationPage() {
                         <h1 className="text-4xl font-bold text-gray-800 mb-4">No Application Found</h1>
                         <p className="text-gray-600 mb-8">You haven't submitted an application yet.</p>
                         <Link
-                            href="/positions"
+                            href="/open"
                             className="inline-block px-8 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-semibold rounded-full hover:opacity-90 transition-opacity"
                         >
                             Browse Positions
@@ -118,6 +129,20 @@ export default function MyApplicationPage() {
                                 className="inline-block mt-3 px-6 py-2 bg-yellow-600 text-white font-semibold rounded-full hover:bg-yellow-700 transition-colors"
                             >
                                 Continue Application
+                            </Link>
+                        </div>
+                    )}
+
+                    {application.status === 'submitted' && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <p className="text-sm text-blue-800 mb-3">
+                                📝 Your application has been submitted! Take the technical test to proceed.
+                            </p>
+                            <Link
+                                href="/take-test"
+                                className="inline-block px-6 py-2 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-semibold rounded-full hover:opacity-90 transition-opacity"
+                            >
+                                Take Technical Test
                             </Link>
                         </div>
                     )}
@@ -254,7 +279,7 @@ export default function MyApplicationPage() {
                         </Link>
                     )}
                     <Link
-                        href="/positions"
+                        href="/open"
                         className="px-8 py-3 border-2 border-pink-500 text-pink-500 font-semibold rounded-full hover:bg-pink-50 transition-colors"
                     >
                         Browse Positions

@@ -1,6 +1,8 @@
 "use client"
 
-import { X, Mail, Phone, FileText, Download, ExternalLink } from "lucide-react"
+import { X, Mail, Phone, FileText, Download, ExternalLink, CheckCircle, XCircle, Clock } from "lucide-react"
+import { getTestAttemptByApplicationId } from "@/app/actions/tests"
+import { useState, useEffect } from "react"
 
 interface Application {
     id: string
@@ -44,6 +46,24 @@ const STATUS_OPTIONS = [
 ]
 
 export function ApplicationDetailModal({ application, isOpen, onClose, onStatusUpdate }: ApplicationDetailModalProps) {
+    const [testAttempt, setTestAttempt] = useState<any>(null)
+
+    useEffect(() => {
+        if (isOpen && application) {
+            loadTestAttempt()
+        } else {
+            setTestAttempt(null)
+        }
+    }, [isOpen, application])
+
+    const loadTestAttempt = async () => {
+        if (!application) return
+        const result = await getTestAttemptByApplicationId(application.id)
+        if (result.success && result.data) {
+            setTestAttempt(result.data)
+        }
+    }
+
     if (!isOpen || !application) return null
 
     const personalInfo = application.personal_information
@@ -154,6 +174,58 @@ export function ApplicationDetailModal({ application, isOpen, onClose, onStatusU
                         </div>
                     </section>
 
+                    {/* Test Results */}
+                    {testAttempt && (
+                        <section>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Technical Test Results</h3>
+                            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div>
+                                        <h4 className="text-lg font-bold text-gray-800">{testAttempt.test.title}</h4>
+                                        <p className="text-sm text-gray-500 capitalize">{testAttempt.test.difficulty} Difficulty</p>
+                                    </div>
+                                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${testAttempt.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                        }`}>
+                                        {testAttempt.passed ? (
+                                            <>
+                                                <CheckCircle className="w-5 h-5" />
+                                                <span className="font-semibold">Passed</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <XCircle className="w-5 h-5" />
+                                                <span className="font-semibold">Failed</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                                        <p className="text-xs text-gray-500 uppercase mb-1">Score</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-2xl font-bold text-gray-800">{testAttempt.score}</span>
+                                            <span className="text-sm text-gray-500">/ {testAttempt.total_points}</span>
+                                        </div>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                                        <p className="text-xs text-gray-500 uppercase mb-1">Percentage</p>
+                                        <p className="text-2xl font-bold text-gray-800">{testAttempt.percentage}%</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                                        <p className="text-xs text-gray-500 uppercase mb-1">Time Taken</p>
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="w-4 h-4 text-gray-400" />
+                                            <span className="text-lg font-semibold text-gray-800">
+                                                {Math.floor(testAttempt.time_taken_seconds / 60)}m {testAttempt.time_taken_seconds % 60}s
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
                     {/* Documents */}
                     <section>
                         <h3 className="text-lg font-semibold text-gray-800 mb-4">Uploaded Documents</h3>
@@ -186,6 +258,63 @@ export function ApplicationDetailModal({ application, isOpen, onClose, onStatusU
                             ))}
                         </div>
                     </section>
+
+                    {/* Interview Scheduling */}
+                    {(application.status === 'document_screening' || application.status === 'interview') && (
+                        <section>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Schedule Interview</h3>
+                            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Date & Time</label>
+                                        <input
+                                            type="datetime-local"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                            id="interview-date"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Google Meet Link</label>
+                                        <input
+                                            type="url"
+                                            placeholder="https://meet.google.com/..."
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                            id="interview-link"
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={async () => {
+                                        const dateInput = document.getElementById('interview-date') as HTMLInputElement
+                                        const linkInput = document.getElementById('interview-link') as HTMLInputElement
+
+                                        if (!dateInput.value || !linkInput.value) {
+                                            alert('Please fill in both date and meet link')
+                                            return
+                                        }
+
+                                        const { scheduleInterview } = await import('@/app/actions/interviews')
+                                        const result = await scheduleInterview(
+                                            application.id,
+                                            new Date(dateInput.value),
+                                            linkInput.value
+                                        )
+
+                                        if (result.success) {
+                                            alert('Interview scheduled and invitation sent!')
+                                            onStatusUpdate(application.id, 'interview')
+                                            onClose()
+                                        } else {
+                                            alert(result.error || 'Failed to schedule interview')
+                                        }
+                                    }}
+                                    className="w-full md:w-auto px-6 py-2 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                                >
+                                    Schedule & Send Invitation
+                                </button>
+                            </div>
+                        </section>
+                    )}
 
                     {/* Status Management */}
                     <section>
