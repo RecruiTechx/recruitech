@@ -105,6 +105,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('[AUTH] Setting session and user');
           setSession(data.session);
           setUser(data.user);
+            // Set user_email cookie for server-side admin check
+            if (typeof window !== 'undefined') {
+              const email = data.user.email || '';
+              document.cookie = `user_email=${encodeURIComponent(email)}; path=/;`;
+            }
         }
 
         return data;
@@ -175,6 +180,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error && error.message !== 'Auth session missing!') {
         console.error('Sign out error:', error);
         // Don't throw - still consider sign out successful locally
+      }
+      // Remove user_email cookie
+      if (typeof window !== 'undefined') {
+        document.cookie = 'user_email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       }
     } catch (err) {
       console.error('Sign out error:', err);
