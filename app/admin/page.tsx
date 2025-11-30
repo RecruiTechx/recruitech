@@ -57,6 +57,15 @@ export default function AdminDashboardPage() {
         return
       }
 
+      // DEBUG: Check env vars
+      import('@/app/actions/debug').then(async ({ checkEnvVars }) => {
+        const envStatus = await checkEnvVars()
+        console.log('[DEBUG] Server Env Status:', envStatus)
+        if (!envStatus.hasServiceKey) {
+          alert('CRITICAL: SUPABASE_SERVICE_ROLE_KEY is missing on the server!')
+        }
+      })
+
       console.log('Auth loaded, checking admin status...')
 
       if (!user || !user.email) {
