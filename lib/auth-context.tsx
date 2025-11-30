@@ -124,10 +124,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log('[AUTH] Starting sign up for:', email);
 
-        const redirectUrl = typeof window !== 'undefined'
-          ? `${window.location.origin}/auth/callback`
-          : process.env.NEXT_PUBLIC_APP_URL
-            ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+        const redirectUrl = process.env.NEXT_PUBLIC_APP_URL
+          ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+          : typeof window !== 'undefined'
+            ? `${window.location.origin}/auth/callback`
             : undefined
 
         const { data, error } = await supabase.auth.signUp({
