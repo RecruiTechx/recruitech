@@ -13,6 +13,10 @@ function getSupabaseAdmin() {
   return createClient(supabaseUrl, supabaseServiceKey)
 }
 
+export async function testPositionsAction() {
+  return { success: true, message: 'Positions action working' }
+}
+
 export interface Position {
   id: string
   name: string

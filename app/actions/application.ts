@@ -14,6 +14,11 @@ function getSupabaseAdmin() {
     throw new Error('Missing Supabase environment variables')
   }
   return createClient<any>(supabaseUrl, supabaseServiceKey)
+  return createClient<any>(supabaseUrl, supabaseServiceKey)
+}
+
+export async function testApplicationAction() {
+  return { success: true, message: 'Application action working' }
 }
 
 export interface PersonalInfoFormData {
