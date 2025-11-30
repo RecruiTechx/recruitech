@@ -5,7 +5,13 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+function getSupabaseAdmin() {
+    if (!supabaseUrl || !supabaseServiceKey) {
+        console.error('Missing Supabase environment variables')
+        throw new Error('Missing Supabase environment variables')
+    }
+    return createClient(supabaseUrl, supabaseServiceKey)
+}
 
 export interface TestData {
     position_id: string
@@ -32,7 +38,7 @@ export interface QuestionData {
 
 export async function getAllTests() {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('tests')
             .select(`
         *,
@@ -55,7 +61,7 @@ export async function getAllTests() {
 
 export async function getTestsByPosition(positionId: string) {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('tests')
             .select(`
         *,
@@ -78,7 +84,7 @@ export async function getTestsByPosition(positionId: string) {
 
 export async function getTest(testId: string) {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('tests')
             .select(`
         *,
@@ -102,7 +108,7 @@ export async function getTest(testId: string) {
 
 export async function createTest(testData: TestData) {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('tests')
             .insert(testData)
             .select()
@@ -122,7 +128,7 @@ export async function createTest(testData: TestData) {
 
 export async function updateTest(testId: string, testData: Partial<TestData>) {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('tests')
             .update(testData)
             .eq('id', testId)
@@ -143,7 +149,7 @@ export async function updateTest(testId: string, testData: Partial<TestData>) {
 
 export async function deleteTest(testId: string) {
     try {
-        const { error } = await supabaseAdmin
+        const { error } = await getSupabaseAdmin()
             .from('tests')
             .delete()
             .eq('id', testId)
@@ -162,7 +168,7 @@ export async function deleteTest(testId: string) {
 
 export async function addQuestion(questionData: QuestionData) {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('test_questions')
             .insert(questionData)
             .select()
@@ -182,7 +188,7 @@ export async function addQuestion(questionData: QuestionData) {
 
 export async function updateQuestion(questionId: string, questionData: Partial<QuestionData>) {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('test_questions')
             .update(questionData)
             .eq('id', questionId)
@@ -203,7 +209,7 @@ export async function updateQuestion(questionId: string, questionData: Partial<Q
 
 export async function deleteQuestion(questionId: string) {
     try {
-        const { error } = await supabaseAdmin
+        const { error } = await getSupabaseAdmin()
             .from('test_questions')
             .delete()
             .eq('id', questionId)
@@ -223,7 +229,7 @@ export async function deleteQuestion(questionId: string) {
 export async function reorderQuestions(questionUpdates: Array<{ id: string; order_index: number }>) {
     try {
         const updates = questionUpdates.map(({ id, order_index }) =>
-            supabaseAdmin
+            getSupabaseAdmin()
                 .from('test_questions')
                 .update({ order_index })
                 .eq('id', id)
@@ -247,7 +253,7 @@ export async function getActiveTestForPosition(positionSlugOrId: string) {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(positionSlugOrId)
         console.log('[DEBUG] Is UUID?', isUUID)
 
-        let query = supabaseAdmin
+        let query = getSupabaseAdmin()
             .from('tests')
             .select(`
         *,
@@ -261,7 +267,7 @@ export async function getActiveTestForPosition(positionSlugOrId: string) {
         if (isUUID) {
             query = query.eq('position_id', positionSlugOrId)
         } else {
-            const { data: positionData } = await supabaseAdmin
+            const { data: positionData } = await getSupabaseAdmin()
                 .from('positions')
                 .select('id')
                 .eq('slug', positionSlugOrId)
@@ -308,7 +314,7 @@ export async function submitTestAttempt(attemptData: {
     time_taken_seconds?: number
 }) {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('test_attempts')
             .insert(attemptData)
             .select()
@@ -328,7 +334,7 @@ export async function submitTestAttempt(attemptData: {
 
 export async function getTestAttemptsByUser(userId: string) {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('test_attempts')
             .select(`
         *,
@@ -351,7 +357,7 @@ export async function getTestAttemptsByUser(userId: string) {
 
 export async function getTestAttempt(testId: string, applicationId: string) {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('test_attempts')
             .select(`
         *,
@@ -378,7 +384,7 @@ export async function getTestAttempt(testId: string, applicationId: string) {
 
 export async function getTestAttemptByApplicationId(applicationId: string) {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('test_attempts')
             .select(`
         *,
@@ -404,7 +410,7 @@ export async function getTestAttemptByApplicationId(applicationId: string) {
 
 export async function resetTestAttempt(testId: string, applicationId: string) {
     try {
-        const { error } = await supabaseAdmin
+        const { error } = await getSupabaseAdmin()
             .from('test_attempts')
             .delete()
             .eq('test_id', testId)

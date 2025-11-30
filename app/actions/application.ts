@@ -8,7 +8,13 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 // Create a Supabase client with service role for server actions
-const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey)
+function getSupabaseAdmin() {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing Supabase environment variables')
+    throw new Error('Missing Supabase environment variables')
+  }
+  return createClient<Database>(supabaseUrl, supabaseServiceKey)
+}
 
 export interface PersonalInfoFormData {
   fullName: string
@@ -37,7 +43,7 @@ export async function savePersonalInformation(
   formData: PersonalInfoFormData
 ) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('personal_information')
       .upsert({
         application_id: applicationId,
@@ -84,7 +90,7 @@ export async function saveDocuments(
   }
 ) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('documents')
       .upsert({
         application_id: applicationId,
@@ -115,7 +121,7 @@ export async function saveDocuments(
  */
 export async function createApplication(userId: string, position: string) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('applications')
       .insert({
         user_id: userId,
@@ -123,35 +129,23 @@ export async function createApplication(userId: string, position: string) {
         status: 'draft',
       })
       .select()
-      .single()
-
-    if (error) {
-      // Handle duplicate key error (user already has an application)
-      if (error.code === '23505') {
-        console.log('Application already exists for user, fetching existing one...')
-        const { data: existingApp, error: fetchError } = await supabaseAdmin
-          .from('applications')
-          .select()
-          .eq('user_id', userId)
-          .single()
-
-        if (fetchError) {
-          console.error('Error fetching existing application after duplicate error:', fetchError)
-          return { success: false, error: fetchError.message }
-        }
-
-        return { success: true, data: existingApp }
-      }
-
-      console.error('Error creating application:', error)
-      return { success: false, error: error.message }
+    if (fetchError) {
+      console.error('Error fetching existing application after duplicate error:', fetchError)
+      return { success: false, error: fetchError.message }
     }
 
-    return { success: true, data }
-  } catch (error) {
-    console.error('Error in createApplication:', error)
-    return { success: false, error: 'An unexpected error occurred' }
+    return { success: true, data: existingApp }
   }
+
+      console.error('Error creating application:', error)
+  return { success: false, error: error.message }
+}
+
+return { success: true, data }
+  } catch (error) {
+  console.error('Error in createApplication:', error)
+  return { success: false, error: 'An unexpected error occurred' }
+}
 }
 
 /**
@@ -159,7 +153,7 @@ export async function createApplication(userId: string, position: string) {
  */
 export async function getApplication(applicationId: string) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('applications')
       .select(`
         *,
@@ -186,7 +180,7 @@ export async function getApplication(applicationId: string) {
  */
 export async function getUserApplication(userId: string) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('applications')
       .select(`
         *,
@@ -222,7 +216,7 @@ export async function updateApplicationStatus(
   status: Database['public']['Tables']['applications']['Row']['status']
 ) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('applications')
       .update({ status })
       .eq('id', applicationId)
@@ -267,7 +261,7 @@ export async function submitApplication(applicationId: string) {
  */
 export async function getAllApplications() {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('applications')
       .select(`
         *,
@@ -293,7 +287,7 @@ export async function getAllApplications() {
  */
 export async function getApplicationsByStatus(status: string) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('applications')
       .select(`
         *,
@@ -320,7 +314,7 @@ export async function getApplicationsByStatus(status: string) {
  */
 export async function getApplicationsByPosition(position: string) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('applications')
       .select(`
         *,
@@ -347,7 +341,7 @@ export async function getApplicationsByPosition(position: string) {
  */
 export async function searchApplications(query: string) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('applications')
       .select(`
         *,
@@ -388,7 +382,7 @@ export async function bulkUpdateApplicationStatus(
   status: Database['public']['Tables']['applications']['Row']['status']
 ) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('applications')
       .update({ status })
       .in('id', applicationIds)
@@ -414,7 +408,7 @@ export async function deleteApplication(applicationId: string) {
     // Explicitly delete related records first to handle cases where cascade delete is not set up
 
     // 1. Delete documents
-    const { error: docError } = await supabaseAdmin
+    const { error: docError } = await getSupabaseAdmin()
       .from('documents')
       .delete()
       .eq('application_id', applicationId)
@@ -425,7 +419,7 @@ export async function deleteApplication(applicationId: string) {
     }
 
     // 2. Delete personal information
-    const { error: infoError } = await supabaseAdmin
+    const { error: infoError } = await getSupabaseAdmin()
       .from('personal_information')
       .delete()
       .eq('application_id', applicationId)
@@ -436,7 +430,7 @@ export async function deleteApplication(applicationId: string) {
     }
 
     // 3. Delete interviews
-    const { error: interviewError } = await supabaseAdmin
+    const { error: interviewError } = await getSupabaseAdmin()
       .from('interviews')
       .delete()
       .eq('application_id', applicationId)
@@ -447,7 +441,7 @@ export async function deleteApplication(applicationId: string) {
     }
 
     // 4. Delete test attempts
-    const { error: testError } = await supabaseAdmin
+    const { error: testError } = await getSupabaseAdmin()
       .from('test_attempts')
       .delete()
       .eq('application_id', applicationId)
@@ -458,7 +452,7 @@ export async function deleteApplication(applicationId: string) {
     }
 
     // 5. Delete application
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from('applications')
       .delete()
       .eq('id', applicationId)
@@ -483,7 +477,7 @@ export async function bulkDeleteApplications(applicationIds: string[]) {
     // Explicitly delete related records first
 
     // 1. Delete documents
-    const { error: docError } = await supabaseAdmin
+    const { error: docError } = await getSupabaseAdmin()
       .from('documents')
       .delete()
       .in('application_id', applicationIds)
@@ -493,7 +487,7 @@ export async function bulkDeleteApplications(applicationIds: string[]) {
     }
 
     // 2. Delete personal information
-    const { error: infoError } = await supabaseAdmin
+    const { error: infoError } = await getSupabaseAdmin()
       .from('personal_information')
       .delete()
       .in('application_id', applicationIds)
@@ -503,7 +497,7 @@ export async function bulkDeleteApplications(applicationIds: string[]) {
     }
 
     // 3. Delete interviews
-    const { error: interviewError } = await supabaseAdmin
+    const { error: interviewError } = await getSupabaseAdmin()
       .from('interviews')
       .delete()
       .in('application_id', applicationIds)
@@ -513,7 +507,7 @@ export async function bulkDeleteApplications(applicationIds: string[]) {
     }
 
     // 4. Delete test attempts
-    const { error: testError } = await supabaseAdmin
+    const { error: testError } = await getSupabaseAdmin()
       .from('test_attempts')
       .delete()
       .in('application_id', applicationIds)
@@ -523,7 +517,7 @@ export async function bulkDeleteApplications(applicationIds: string[]) {
     }
 
     // 5. Delete applications
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from('applications')
       .delete()
       .in('id', applicationIds)

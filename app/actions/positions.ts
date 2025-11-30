@@ -5,7 +5,13 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+function getSupabaseAdmin() {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing Supabase environment variables')
+    throw new Error('Missing Supabase environment variables')
+  }
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
 
 export interface Position {
   id: string
@@ -25,8 +31,8 @@ export interface Position {
 export async function checkIsAdmin(email: string) {
   try {
     console.log('[checkIsAdmin] Checking email:', email)
-    
-    const { data, error } = await supabaseAdmin
+
+    const { data, error } = await getSupabaseAdmin()
       .from('admin_users')
       .select('*')
       .eq('email', email)
@@ -53,7 +59,7 @@ export async function checkIsAdmin(email: string) {
  */
 export async function getAllPositions() {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('positions')
       .select('*')
       .order('created_at', { ascending: true })
@@ -75,7 +81,7 @@ export async function getAllPositions() {
  */
 export async function getActivePositions() {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('positions')
       .select('*')
       .eq('is_active', true)
@@ -101,7 +107,7 @@ export async function updatePosition(
   updates: Partial<Omit<Position, 'id' | 'created_at' | 'updated_at'>>
 ) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('positions')
       .update(updates)
       .eq('id', id)
@@ -127,7 +133,7 @@ export async function createPosition(
   position: Omit<Position, 'id' | 'created_at' | 'updated_at'>
 ) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('positions')
       .insert(position)
       .select()
@@ -150,7 +156,7 @@ export async function createPosition(
  */
 export async function deletePosition(id: string) {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from('positions')
       .delete()
       .eq('id', id)

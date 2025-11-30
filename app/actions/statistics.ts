@@ -5,7 +5,13 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+function getSupabaseAdmin() {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing Supabase environment variables')
+    throw new Error('Missing Supabase environment variables')
+  }
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
 
 export interface DashboardStats {
   totalApplications: number
@@ -46,7 +52,7 @@ export interface PositionStats {
 export async function getDashboardStats(): Promise<{ success: boolean; data?: DashboardStats; error?: string }> {
   try {
     // Get total applications count
-    const { count: totalApplications, error: countError } = await supabaseAdmin
+    const { count: totalApplications, error: countError } = await getSupabaseAdmin()
       .from('applications')
       .select('*', { count: 'exact', head: true })
 
@@ -56,7 +62,7 @@ export async function getDashboardStats(): Promise<{ success: boolean; data?: Da
     }
 
     // Get applications by status
-    const { data: statusData, error: statusError } = await supabaseAdmin
+    const { data: statusData, error: statusError } = await getSupabaseAdmin()
       .from('applications')
       .select('status')
 
@@ -75,7 +81,7 @@ export async function getDashboardStats(): Promise<{ success: boolean; data?: Da
     }
 
     // Get applications by position
-    const { data: positionData, error: positionError } = await supabaseAdmin
+    const { data: positionData, error: positionError } = await getSupabaseAdmin()
       .from('applications')
       .select('position')
 
@@ -85,7 +91,7 @@ export async function getDashboardStats(): Promise<{ success: boolean; data?: Da
     }
 
     // Get all positions to match with quotas
-    const { data: positions, error: positionsError } = await supabaseAdmin
+    const { data: positions, error: positionsError } = await getSupabaseAdmin()
       .from('positions')
       .select('slug, name, total_quota')
 
@@ -104,7 +110,7 @@ export async function getDashboardStats(): Promise<{ success: boolean; data?: Da
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-    const { count: recentApplications, error: recentError } = await supabaseAdmin
+    const { count: recentApplications, error: recentError } = await getSupabaseAdmin()
       .from('applications')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', sevenDaysAgo.toISOString())
@@ -115,8 +121,8 @@ export async function getDashboardStats(): Promise<{ success: boolean; data?: Da
 
     // Calculate acceptance rate
     const totalProcessed = applicationsByStatus.accepted + applicationsByStatus.rejected
-    const acceptanceRate = totalProcessed > 0 
-      ? (applicationsByStatus.accepted / totalProcessed) * 100 
+    const acceptanceRate = totalProcessed > 0
+      ? (applicationsByStatus.accepted / totalProcessed) * 100
       : 0
 
     return {
@@ -143,7 +149,7 @@ export async function getDashboardStats(): Promise<{ success: boolean; data?: Da
 export async function getPositionStats(): Promise<{ success: boolean; data?: PositionStats[]; error?: string }> {
   try {
     // Get all positions
-    const { data: positions, error: positionsError } = await supabaseAdmin
+    const { data: positions, error: positionsError } = await getSupabaseAdmin()
       .from('positions')
       .select('*')
       .order('name', { ascending: true })
@@ -154,7 +160,7 @@ export async function getPositionStats(): Promise<{ success: boolean; data?: Pos
     }
 
     // Get all applications
-    const { data: applications, error: appsError } = await supabaseAdmin
+    const { data: applications, error: appsError } = await getSupabaseAdmin()
       .from('applications')
       .select('position, status')
 
@@ -165,7 +171,7 @@ export async function getPositionStats(): Promise<{ success: boolean; data?: Pos
 
     const positionStats: PositionStats[] = positions?.map(pos => {
       const posApps = applications?.filter(app => app.position === pos.slug) || []
-      
+
       return {
         id: pos.id,
         name: pos.name,
@@ -194,7 +200,7 @@ export async function getPositionStats(): Promise<{ success: boolean; data?: Pos
  */
 export async function getRecentActivity(limit: number = 10) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('applications')
       .select(`
         id,
