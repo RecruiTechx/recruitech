@@ -105,11 +105,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('[AUTH] Setting session and user');
           setSession(data.session);
           setUser(data.user);
-            // Set user_email cookie for server-side admin check
-            if (typeof window !== 'undefined') {
-              const email = data.user.email || '';
-              document.cookie = `user_email=${encodeURIComponent(email)}; path=/;`;
-            }
+          // Set user_email cookie for server-side admin check
+          if (typeof window !== 'undefined') {
+            const email = data.user.email || '';
+            document.cookie = `user_email=${encodeURIComponent(email)}; path=/;`;
+            // Reload page so server can see cookie
+            window.location.reload();
+          }
         }
 
         return data;
