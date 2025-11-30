@@ -33,22 +33,24 @@ export default function SignUpForm() {
   async function handleGoogleSignUp() {
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const redirectUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback`
+        : process.env.NEXT_PUBLIC_APP_URL
+          ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+          : undefined
+
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Google sign-up failed';
-      console.error('Google sign up error:', message);
+          redirectTo: redirectUrl
+        }
+      })
+      if (error) throw error
+    } catch (error) {
+      console.error('Error signing up with Google:', error)
       toast({
         title: 'Error',
-        description: message,
+        description: 'Failed to sign up with Google',
         variant: 'destructive',
       });
       setLoading(false);
@@ -120,9 +122,8 @@ export default function SignUpForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className={`w-full rounded-lg border-2 bg-white px-4 py-3 text-sm outline-none transition-colors ${
-            errors.email ? 'border-red-500' : 'border-gray-200 focus:border-pink-400'
-          }`}
+          className={`w-full rounded-lg border-2 bg-white px-4 py-3 text-sm outline-none transition-colors ${errors.email ? 'border-red-500' : 'border-gray-200 focus:border-pink-400'
+            }`}
           placeholder=""
           disabled={loading}
         />
@@ -146,9 +147,8 @@ export default function SignUpForm() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`w-full rounded-lg border-2 bg-white px-4 py-3 text-sm outline-none transition-colors pr-12 ${
-              errors.password ? 'border-red-500' : 'border-gray-200 focus:border-pink-400'
-            }`}
+            className={`w-full rounded-lg border-2 bg-white px-4 py-3 text-sm outline-none transition-colors pr-12 ${errors.password ? 'border-red-500' : 'border-gray-200 focus:border-pink-400'
+              }`}
             placeholder=""
             disabled={loading}
           />
@@ -200,9 +200,8 @@ export default function SignUpForm() {
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className={`w-full rounded-lg border-2 bg-white px-4 py-3 text-sm outline-none transition-colors pr-12 ${
-              errors.confirmPassword ? 'border-red-500' : 'border-gray-200 focus:border-pink-400'
-            }`}
+            className={`w-full rounded-lg border-2 bg-white px-4 py-3 text-sm outline-none transition-colors pr-12 ${errors.confirmPassword ? 'border-red-500' : 'border-gray-200 focus:border-pink-400'
+              }`}
             placeholder=""
             disabled={loading}
           />

@@ -5,10 +5,43 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { SiteHeader } from "@/components/site-header"
 import { useAuth } from "@/lib/auth-context"
+import { useEffect, useState } from "react"
+import { checkIsAdmin } from "@/app/actions/positions"
 
 export default function DashboardPage() {
   const router = useRouter()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true)
+
+  useEffect(() => {
+    const checkAndRedirect = async () => {
+      if (user?.email) {
+        console.log('[DASHBOARD] Checking if user is admin:', user.email)
+        const adminCheck = await checkIsAdmin(user.email)
+        console.log('[DASHBOARD] Admin check result:', adminCheck)
+        
+        if (adminCheck.isAdmin) {
+          console.log('[DASHBOARD] Redirecting to admin dashboard')
+          router.push('/admin')
+          return
+        }
+      }
+      setIsCheckingAdmin(false)
+    }
+
+    checkAndRedirect()
+  }, [user, router])
+
+  if (isCheckingAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   const scrollToAlumni = () => {
     const alumniSection = document.getElementById('alumni-section')
