@@ -129,23 +129,35 @@ export async function createApplication(userId: string, position: string) {
         status: 'draft',
       })
       .select()
-    if (fetchError) {
-      console.error('Error fetching existing application after duplicate error:', fetchError)
-      return { success: false, error: fetchError.message }
-    }
+      .single()
 
-    return { success: true, data: existingApp }
-  }
+    if (error) {
+      // Handle duplicate key error (user already has an application)
+      if (error.code === '23505') {
+        console.log('Application already exists for user, fetching existing one...')
+        const { data: existingApp, error: fetchError } = await getSupabaseAdmin()
+          .from('applications')
+          .select()
+          .eq('user_id', userId)
+          .single()
+
+        if (fetchError) {
+          console.error('Error fetching existing application after duplicate error:', fetchError)
+          return { success: false, error: fetchError.message }
+        }
+
+        return { success: true, data: existingApp }
+      }
 
       console.error('Error creating application:', error)
-  return { success: false, error: error.message }
-}
+      return { success: false, error: error.message }
+    }
 
-return { success: true, data }
+    return { success: true, data }
   } catch (error) {
-  console.error('Error in createApplication:', error)
-  return { success: false, error: 'An unexpected error occurred' }
-}
+    console.error('Error in createApplication:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
 }
 
 /**
