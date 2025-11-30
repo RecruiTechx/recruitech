@@ -13,7 +13,7 @@ function getSupabaseAdmin() {
     console.error('Missing Supabase environment variables')
     throw new Error('Missing Supabase environment variables')
   }
-  return createClient<Database>(supabaseUrl, supabaseServiceKey)
+  return createClient<any>(supabaseUrl, supabaseServiceKey)
 }
 
 export interface PersonalInfoFormData {

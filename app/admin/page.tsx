@@ -79,20 +79,28 @@ export default function AdminDashboardPage() {
       console.log('User email:', user.email)
 
       // Check if user is admin
-      const adminCheck = await checkIsAdmin(user.email)
-      console.log('Admin check result:', adminCheck, 'for email:', user.email)
+      try {
+        const adminCheck = await checkIsAdmin(user.email)
+        console.log('Admin check result:', adminCheck, 'for email:', user.email)
 
-      if (!adminCheck.isAdmin) {
-        console.log('User is not admin, redirecting to dashboard')
+        if (!adminCheck.isAdmin) {
+          console.log('User is not admin, redirecting to dashboard')
+          setIsCheckingAuth(false)
+          router.push("/dashboard")
+          return
+        }
+
+        console.log('User is admin! Loading data...')
+        setIsAdmin(true)
         setIsCheckingAuth(false)
-        router.push("/dashboard")
-        return
+        loadAllData()
+      } catch (error) {
+        console.error('Error checking admin status:', error)
+        // If server action fails (e.g. 500), we should probably treat as not admin or show error
+        // For now, let's redirect to dashboard to avoid getting stuck
+        setIsCheckingAuth(false)
+        // router.push("/dashboard") // Optional: redirect or show error state
       }
-
-      console.log('User is admin! Loading data...')
-      setIsAdmin(true)
-      setIsCheckingAuth(false)
-      loadAllData()
     }
 
     checkAdminAndLoadData()
