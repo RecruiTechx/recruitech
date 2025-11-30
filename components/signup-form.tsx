@@ -33,10 +33,11 @@ export default function SignUpForm() {
   async function handleGoogleSignUp() {
     try {
       setLoading(true);
-      const redirectUrl = typeof window !== 'undefined'
-        ? `${window.location.origin}/auth/callback`
-        : process.env.NEXT_PUBLIC_APP_URL
-          ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '');
+      const redirectUrl = appUrl
+        ? `${appUrl}/auth/callback`
+        : typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback`
           : undefined
 
       const { error } = await supabase.auth.signInWithOAuth({
