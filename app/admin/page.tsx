@@ -57,12 +57,13 @@ export default function AdminDashboardPage() {
         return
       }
 
-      // DEBUG: Check env vars
-      import('@/app/actions/debug').then(async ({ checkEnvVars }) => {
-        const envStatus = await checkEnvVars()
-        console.log('[DEBUG] Server Env Status:', envStatus)
-        if (!envStatus.hasServiceKey) {
-          alert('CRITICAL: SUPABASE_SERVICE_ROLE_KEY is missing on the server!')
+      // DEBUG: Test simple action
+      import('@/app/actions/test-simple').then(async ({ testSimpleAction }) => {
+        try {
+          const res = await testSimpleAction()
+          console.log('[DEBUG] Simple Action Result:', res)
+        } catch (e) {
+          console.error('[DEBUG] Simple Action Failed:', e)
         }
       })
 
