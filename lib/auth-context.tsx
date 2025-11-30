@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string, password: string) => {
       try {
         console.log('[AUTH] Starting sign in for:', email);
-        
+
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -123,10 +123,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string, password: string) => {
       try {
         console.log('[AUTH] Starting sign up for:', email);
-        
+
+        const redirectUrl = typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback`
+          : process.env.NEXT_PUBLIC_APP_URL
+            ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+            : undefined
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: redirectUrl
+          }
         });
 
         if (error) {

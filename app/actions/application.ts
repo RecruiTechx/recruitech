@@ -411,7 +411,53 @@ export async function bulkUpdateApplicationStatus(
  */
 export async function deleteApplication(applicationId: string) {
   try {
-    // Delete related records first (documents and personal_information will cascade)
+    // Explicitly delete related records first to handle cases where cascade delete is not set up
+
+    // 1. Delete documents
+    const { error: docError } = await supabaseAdmin
+      .from('documents')
+      .delete()
+      .eq('application_id', applicationId)
+
+    if (docError) {
+      console.error('Error deleting related documents:', docError)
+      // Continue anyway, as they might not exist or might be handled by cascade
+    }
+
+    // 2. Delete personal information
+    const { error: infoError } = await supabaseAdmin
+      .from('personal_information')
+      .delete()
+      .eq('application_id', applicationId)
+
+    if (infoError) {
+      console.error('Error deleting related personal information:', infoError)
+      // Continue anyway
+    }
+
+    // 3. Delete interviews
+    const { error: interviewError } = await supabaseAdmin
+      .from('interviews')
+      .delete()
+      .eq('application_id', applicationId)
+
+    if (interviewError) {
+      console.error('Error deleting related interviews:', interviewError)
+      // Continue anyway
+    }
+
+    // 4. Delete test attempts
+    const { error: testError } = await supabaseAdmin
+      .from('test_attempts')
+      .delete()
+      .eq('application_id', applicationId)
+
+    if (testError) {
+      console.error('Error deleting related test attempts:', testError)
+      // Continue anyway
+    }
+
+    // 5. Delete application
     const { error } = await supabaseAdmin
       .from('applications')
       .delete()
@@ -434,6 +480,49 @@ export async function deleteApplication(applicationId: string) {
  */
 export async function bulkDeleteApplications(applicationIds: string[]) {
   try {
+    // Explicitly delete related records first
+
+    // 1. Delete documents
+    const { error: docError } = await supabaseAdmin
+      .from('documents')
+      .delete()
+      .in('application_id', applicationIds)
+
+    if (docError) {
+      console.error('Error bulk deleting related documents:', docError)
+    }
+
+    // 2. Delete personal information
+    const { error: infoError } = await supabaseAdmin
+      .from('personal_information')
+      .delete()
+      .in('application_id', applicationIds)
+
+    if (infoError) {
+      console.error('Error bulk deleting related personal information:', infoError)
+    }
+
+    // 3. Delete interviews
+    const { error: interviewError } = await supabaseAdmin
+      .from('interviews')
+      .delete()
+      .in('application_id', applicationIds)
+
+    if (interviewError) {
+      console.error('Error bulk deleting related interviews:', interviewError)
+    }
+
+    // 4. Delete test attempts
+    const { error: testError } = await supabaseAdmin
+      .from('test_attempts')
+      .delete()
+      .in('application_id', applicationIds)
+
+    if (testError) {
+      console.error('Error bulk deleting related test attempts:', testError)
+    }
+
+    // 5. Delete applications
     const { error } = await supabaseAdmin
       .from('applications')
       .delete()

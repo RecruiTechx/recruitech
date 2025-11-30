@@ -45,8 +45,10 @@ export default function AuthForm() {
       setIsPending(true);
       const redirectUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/auth/callback`
-        : process.env.NEXT_PUBLIC_APP_URL + '/auth/callback'
-      
+        : process.env.NEXT_PUBLIC_APP_URL
+          ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+          : undefined
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -84,7 +86,7 @@ export default function AuthForm() {
       }
 
       console.log('Attempting sign in with:', email);
-      
+
       // Sign in
       const result = await signIn(email, password);
 
@@ -201,9 +203,8 @@ export default function AuthForm() {
       </div>
 
       <label className="flex items-center gap-2 cursor-pointer group">
-        <div className={`relative w-5 h-5 rounded border-2 transition-all ${
-          rememberMe ? 'bg-pink-500 border-pink-500' : 'bg-white border-gray-300'
-        }`}>
+        <div className={`relative w-5 h-5 rounded border-2 transition-all ${rememberMe ? 'bg-pink-500 border-pink-500' : 'bg-white border-gray-300'
+          }`}>
           <input
             type="checkbox"
             checked={rememberMe}
@@ -225,9 +226,8 @@ export default function AuthForm() {
             </svg>
           )}
         </div>
-        <span className={`text-sm transition-colors ${
-          rememberMe ? 'text-pink-600 font-medium' : 'text-gray-600'
-        }`}>
+        <span className={`text-sm transition-colors ${rememberMe ? 'text-pink-600 font-medium' : 'text-gray-600'
+          }`}>
           Remember Me
         </span>
       </label>
