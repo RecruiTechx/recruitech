@@ -39,6 +39,7 @@
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "latest",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/auth-helpers-react": "^0.15.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.78.0",
     "@types/nodemailer": "^7.0.4",

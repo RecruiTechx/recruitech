@@ -12,21 +12,21 @@ export async function GET(request: NextRequest) {
   console.log('[CALLBACK] Auth callback triggered')
 
   if (code) {
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
-    const { data } = await supabase.auth.exchangeCodeForSession(code)
-    
-    console.log('[CALLBACK] User authenticated:', data.user?.email)
-    
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const { data } = await supabase.auth.exchangeCodeForSession(code);
+
+    console.log('[CALLBACK] User authenticated:', data.user?.email);
+
     // Check if user is admin and redirect accordingly
     if (data.user?.email) {
-      console.log('[CALLBACK] Checking admin status for:', data.user.email)
-      const adminCheck = await checkIsAdmin(data.user.email)
-      console.log('[CALLBACK] Admin check result:', adminCheck)
-      
+      console.log('[CALLBACK] Checking admin status for:', data.user.email);
+      const adminCheck = await checkIsAdmin(data.user.email);
+      console.log('[CALLBACK] Admin check result:', adminCheck);
+
       if (adminCheck.isAdmin) {
-        console.log('[CALLBACK] User is admin, redirecting to /admin')
-        return NextResponse.redirect(`${origin}/admin`)
+        console.log('[CALLBACK] User is admin, redirecting to /admin');
+        return NextResponse.redirect(`${origin}/admin`);
       }
     }
   }
